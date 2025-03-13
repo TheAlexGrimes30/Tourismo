@@ -41,6 +41,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="20dp"
         android:layout_marginEnd="16dp"
+        android:layout_marginBottom="45dp"
         android:background="@android:drawable/edit_text"
         android:gravity="top"
         android:hint="Введите описание места (0/500)"
@@ -48,6 +49,7 @@
         android:maxLength="500"
         android:padding="12dp"
         android:textSize="16sp"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/image1" />
