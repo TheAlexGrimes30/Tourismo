@@ -109,23 +109,45 @@ fun BottomNavigationBar(selectedTab: Int, onTabSelected: (Int) -> Unit) {
         NavigationBarItem(
             selected = selectedTab == 0,
             onClick = { onTabSelected(0) },
-            icon = { Text("🏠") },
-            label = { Text("Home", color = if (selectedTab == 0) Color.White else Color.Gray) }
+            icon = { Text("🏠", color = if (selectedTab == 0) Color.White else Color.Gray) },
+            label = { Text("Home", color = if (selectedTab == 0) Color.White else Color.Gray) },
+            colors = NavigationBarItemDefaults.colors(
+                indicatorColor = Color.Black,
+                selectedIconColor = Color.White,
+                selectedTextColor = Color.White,
+                unselectedIconColor = Color.Gray,
+                unselectedTextColor = Color.Gray
+            )
         )
         NavigationBarItem(
             selected = selectedTab == 1,
             onClick = { onTabSelected(1) },
-            icon = { Text("⛅") },
-            label = { Text("Weather", color = if (selectedTab == 1) Color.White else Color.Gray) }
+            icon = { Text("⛅", color = if (selectedTab == 1) Color.White else Color.Gray) },
+            label = { Text("Weather", color = if (selectedTab == 1) Color.White else Color.Gray) },
+            colors = NavigationBarItemDefaults.colors(
+                indicatorColor = Color.Black,
+                selectedIconColor = Color.White,
+                selectedTextColor = Color.White,
+                unselectedIconColor = Color.Gray,
+                unselectedTextColor = Color.Gray
+            )
         )
         NavigationBarItem(
             selected = selectedTab == 2,
             onClick = { onTabSelected(2) },
-            icon = { Text("📜") },
-            label = { Text("History", color = if (selectedTab == 2) Color.White else Color.Gray) }
+            icon = { Text("📜", color = if (selectedTab == 2) Color.White else Color.Gray) },
+            label = { Text("History", color = if (selectedTab == 2) Color.White else Color.Gray) },
+            colors = NavigationBarItemDefaults.colors(
+                indicatorColor = Color.Black,
+                selectedIconColor = Color.White,
+                selectedTextColor = Color.White,
+                unselectedIconColor = Color.Gray,
+                unselectedTextColor = Color.Gray
+            )
         )
     }
 }
+
 
 @Composable
 fun HomeScreen() {
