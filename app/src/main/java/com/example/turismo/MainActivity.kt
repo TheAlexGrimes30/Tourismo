@@ -41,62 +41,67 @@ fun MainScreen() {
     var searchQuery by remember { mutableStateOf(TextFieldValue("")) }
     var selectedTab by remember { mutableStateOf(0) }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp)
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(Color.White)
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                        contentAlignment = Alignment.CenterStart
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            if (searchQuery.text.isEmpty()) {
-                                Text(
-                                    text = "Search",
-                                    color = Color.Gray,
-                                    fontSize = 14.sp,
-                                    modifier = Modifier.weight(1.2f),
-                                    textAlign = TextAlign.Start
-                                )
-                            }
-                            BasicTextField(
-                                value = searchQuery,
-                                onValueChange = { searchQuery = it },
-                                modifier = Modifier.weight(6f)
-                            )
-                            Icon(
-                                imageVector = Icons.Default.Search,
-                                contentDescription = "Search Icon",
-                                tint = Color.Gray,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
+    Column(modifier = Modifier.fillMaxSize()) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color.LightGray)
+                .padding(top = 16.dp, start = 16.dp, end = 16.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(Color.White)
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                contentAlignment = Alignment.CenterStart
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    if (searchQuery.text.isEmpty()) {
+                        Text(
+                            text = "Search",
+                            color = Color.Gray,
+                            fontSize = 14.sp,
+                            modifier = Modifier.weight(1.2f),
+                            textAlign = TextAlign.Start
+                        )
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Black)
-            )
-        },
-        bottomBar = {
-            BottomNavigationBar(selectedTab) { selectedTab = it }
+                    BasicTextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        modifier = Modifier.weight(6f)
+                    )
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "Search Icon",
+                        tint = Color.Gray,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
         }
-    ) { innerPadding ->
-        Box(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
+
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxSize()
+                .background(Color.LightGray)
+        ) {
             when (selectedTab) {
                 0 -> HomeScreen()
                 1 -> WeatherScreen()
                 2 -> HistoryScreen()
             }
         }
+
+        BottomNavigationBar(selectedTab) { selectedTab = it }
     }
 }
+
+
 
 @Composable
 fun BottomNavigationBar(selectedTab: Int, onTabSelected: (Int) -> Unit) {
