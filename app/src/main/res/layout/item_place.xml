@@ -5,57 +5,47 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
-    app:cardCornerRadius="8dp"
+    app:cardCornerRadius="16dp"
     app:cardElevation="4dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:padding="16dp">
+        android:padding="16dp"
+        android:gravity="center_vertical">
 
-        <ImageView
+        <!-- Закруглённое изображение -->
+        <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/placeImage"
             android:layout_width="64dp"
             android:layout_height="64dp"
             android:scaleType="centerCrop"
             android:src="@drawable/image1"
             android:contentDescription="Изображение места"
-            android:layout_marginEnd="16dp"/>
-
+            android:layout_marginEnd="16dp"
+            app:shapeAppearanceOverlay="@drawable/rounded_image"/>
+        
         <TextView
             android:id="@+id/placeName"
-            android:layout_width="0dp"
+            android:layout_width="242dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:contentDescription="Название места"
             android:text="Название места"
-            android:textSize="18sp"
-            android:textStyle="bold"
             android:textColor="@android:color/black"
-            android:contentDescription="Название места"/>
-        
-        <LinearLayout
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/arrowIcon"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <ImageButton
-                android:id="@+id/btnEdit"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/ic_edit"
-                android:contentDescription="Редактировать место"
-                android:layout_marginEnd="8dp"/>
-
-            <ImageButton
-                android:id="@+id/btnDelete"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/ic_delete"
-                android:contentDescription="Удалить место"/>
-        </LinearLayout>
+            android:text="›"
+            android:textSize="40sp"
+            android:textColor="@android:color/darker_gray"
+            android:paddingStart="8dp"
+            android:contentDescription="Переход"/>
 
     </LinearLayout>
 </androidx.cardview.widget.CardView>
