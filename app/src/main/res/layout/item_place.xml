@@ -15,7 +15,6 @@
         android:padding="16dp"
         android:gravity="center_vertical">
 
-        <!-- Закруглённое изображение -->
         <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/placeImage"
             android:layout_width="64dp"
@@ -25,7 +24,7 @@
             android:contentDescription="Изображение места"
             android:layout_marginEnd="16dp"
             app:shapeAppearanceOverlay="@drawable/rounded_image"/>
-        
+
         <TextView
             android:id="@+id/placeName"
             android:layout_width="242dp"
