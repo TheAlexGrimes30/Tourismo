@@ -1,10 +1,14 @@
 package com.example.turismo
 
 import android.os.Bundle
+import android.view.LayoutInflater
+import android.widget.Button
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -16,12 +20,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import com.example.turismo.ui.theme.TurismoTheme
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,6 +50,14 @@ fun MainScreen() {
     var selectedTab by remember { mutableStateOf(0) }
 
     Column(modifier = Modifier.fillMaxSize()) {
+
+        Spacer(
+            modifier = Modifier
+                .height(32.dp)
+                .fillMaxWidth()
+                .background(Color.DarkGray) 
+        )
+
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -101,8 +117,6 @@ fun MainScreen() {
     }
 }
 
-
-
 @Composable
 fun BottomNavigationBar(selectedTab: Int, onTabSelected: (Int) -> Unit) {
     NavigationBar(containerColor = Color.Black) {
@@ -148,13 +162,57 @@ fun BottomNavigationBar(selectedTab: Int, onTabSelected: (Int) -> Unit) {
     }
 }
 
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen() {
-    Box(modifier = Modifier.fillMaxSize().background(Color.LightGray)) {
-        Text(text = "Здесь будет карта", modifier = Modifier.padding(16.dp))
+    val context = LocalContext.current
+    var showBottomSheet by remember { mutableStateOf(false) }
+
+    val bottomSheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true,
+        confirmValueChange = { true }
+    )
+
+    val coroutineScope = rememberCoroutineScope()
+
+    if (showBottomSheet) {
+        ModalBottomSheet(
+            onDismissRequest = {
+                showBottomSheet = false
+            },
+            sheetState = bottomSheetState,
+        ) {
+            AndroidView(
+                factory = { ctx ->
+                    LayoutInflater.from(ctx).inflate(R.layout.bottom_sheet_dialog, null).apply {
+                        val addButton = findViewById<Button>(R.id.btn_add_location)
+                        addButton.setOnClickListener {
+                            Toast.makeText(ctx, "Место добавлено", Toast.LENGTH_SHORT).show()
+                            coroutineScope.launch {
+                                bottomSheetState.hide()
+                            }
+                        }
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.LightGray)
+            .clickable { showBottomSheet = true },
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "Здесь будет карта (нажми, чтобы добавить место)",
+            modifier = Modifier.padding(16.dp)
+        )
     }
 }
+
 
 @Composable
 fun WeatherScreen() {
