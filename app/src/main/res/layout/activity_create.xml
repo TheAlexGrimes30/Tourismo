@@ -66,10 +66,12 @@
         android:layout_marginTop="68dp"
         android:contentDescription="Добавить файл"
         android:src="@android:drawable/ic_menu_add"
+        android:scaleType="centerCrop"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.08"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/placeDescription" />
+
 
     <Button
         android:id="@+id/addPlaceButton"
