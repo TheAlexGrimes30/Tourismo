@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.widget.Button
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -31,6 +32,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.example.turismo.ui.theme.TurismoTheme
 import kotlinx.coroutines.launch
+import kotlin.random.Random
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,7 +58,7 @@ fun MainScreen() {
             modifier = Modifier
                 .height(32.dp)
                 .fillMaxWidth()
-                .background(Color.DarkGray) 
+                .background(Color.DarkGray)
         )
 
         Box(
@@ -167,7 +169,10 @@ fun BottomNavigationBar(selectedTab: Int, onTabSelected: (Int) -> Unit) {
 @Composable
 fun HomeScreen() {
     val context = LocalContext.current
-    var showBottomSheet by rememberSaveable { mutableStateOf(false) } // Use rememberSaveable to persist the state
+    var showBottomSheet by rememberSaveable { mutableStateOf(false) }
+
+    val latitude = remember { mutableStateOf(0.0) }
+    val longitude = remember { mutableStateOf(0.0) }
 
     val bottomSheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true,
@@ -176,24 +181,40 @@ fun HomeScreen() {
 
     val coroutineScope = rememberCoroutineScope()
 
-    // Ensure the bottom sheet can be dismissed correctly after adding an item
+    val generateRandomCoordinates: () -> Unit = {
+        latitude.value = Random.nextDouble(-90.0, 90.0)
+        longitude.value = Random.nextDouble(-180.0, 180.0)
+    }
+
     if (showBottomSheet) {
         ModalBottomSheet(
             onDismissRequest = {
-                showBottomSheet = false // Hide the bottom sheet when dismissed
+                showBottomSheet = false
             },
             sheetState = bottomSheetState,
         ) {
             AndroidView(
                 factory = { ctx ->
                     LayoutInflater.from(ctx).inflate(R.layout.bottom_sheet_dialog, null).apply {
+                        val latitudeTextView = findViewById<TextView>(R.id.latitude_value)
+                        val longitudeTextView = findViewById<TextView>(R.id.longitude_value)
+
+                        generateRandomCoordinates()
+
+                        latitudeTextView.text = latitude.value.toString()
+                        longitudeTextView.text = longitude.value.toString()
+
                         val addButton = findViewById<Button>(R.id.btn_add_location)
                         addButton.setOnClickListener {
-                            // Start new activity and dismiss the bottom sheet
-                            ctx.startActivity(Intent(ctx, CreateActivity::class.java))
+                            val intent = Intent(ctx, CreateActivity::class.java).apply {
+                                putExtra("LATITUDE", latitude.value)
+                                putExtra("LONGITUDE", longitude.value)
+                            }
+                            ctx.startActivity(intent)
+
                             coroutineScope.launch {
                                 bottomSheetState.hide()
-                                showBottomSheet = false // Hide the bottom sheet after the action
+                                showBottomSheet = false
                             }
                         }
                     }
@@ -203,13 +224,12 @@ fun HomeScreen() {
         }
     }
 
-    // Allow for clicking again after dismissing
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.LightGray)
             .clickable {
-                if (!showBottomSheet) { 
+                if (!showBottomSheet) {
                     showBottomSheet = true
                 }
             },
