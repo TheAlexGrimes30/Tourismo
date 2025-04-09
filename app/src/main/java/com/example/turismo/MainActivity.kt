@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.widget.Button
 import android.widget.TextView
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -241,8 +240,6 @@ fun HomeScreen() {
         )
     }
 }
-
-
 
 @Composable
 fun WeatherScreen() {

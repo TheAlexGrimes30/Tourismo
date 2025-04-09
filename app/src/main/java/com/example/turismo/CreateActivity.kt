@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.OpenableColumns
+import android.util.Log
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
@@ -46,6 +47,13 @@ class CreateActivity : ComponentActivity() {
         placeName = findViewById(R.id.placeName)
         placeDescription = findViewById(R.id.placeDescription)
         addPlaceButton = findViewById(R.id.addPlaceButton)
+
+        // Получаем широту и долготу из Intent
+        val latitude = intent.getDoubleExtra("LATITUDE", 0.0)
+        val longitude = intent.getDoubleExtra("LONGITUDE", 0.0)
+
+        // Выводим в лог
+        Log.d("CreateActivity", "Latitude: $latitude, Longitude: $longitude")
 
         addFileIcon.setOnClickListener {
             val intent = Intent(Intent.ACTION_PICK).apply {
