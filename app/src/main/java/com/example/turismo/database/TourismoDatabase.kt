@@ -24,9 +24,9 @@ class TourismoDatabase(context: Context) : SQLiteOpenHelper(context, DATABASE_NA
         val createTable = """
             CREATE TABLE $TABLE_NAME (
                 $COLUMN_ID INTEGER PRIMARY KEY AUTOINCREMENT,
-                $COLUMN_TITLE TEXT,
+                $COLUMN_TITLE TEXT NOT NULL,
                 $COLUMN_DESCRIPTION TEXT,
-                $COLUMN_IMAGE_PATH TEXT,
+                $COLUMN_IMAGE_PATH TEXT NOT NULL,
                 $COLUMN_LATITUDE REAL,  
                 $COLUMN_LONGITUDE REAL 
             )
@@ -50,18 +50,20 @@ class TourismoDatabase(context: Context) : SQLiteOpenHelper(context, DATABASE_NA
     }
 
     fun insertItem(
-        title: String, description: String, imagePath: String,
-        latitude: Double, longitude: Double
+        title: String,
+        description: String,
+        imagePath: String,
+        latitude: Double,
+        longitude: Double
     ): Long {
         val db = writableDatabase
         val values = ContentValues().apply {
             put(COLUMN_TITLE, title)
-            put(COLUMN_DESCRIPTION, description)
+            put(COLUMN_DESCRIPTION, description) // Можно быть пустым
             put(COLUMN_IMAGE_PATH, imagePath)
             put(COLUMN_LATITUDE, latitude)
             put(COLUMN_LONGITUDE, longitude)
         }
         return db.insert(TABLE_NAME, null, values)
     }
-
 }

@@ -26,7 +26,6 @@ class CreateActivity : ComponentActivity() {
     private var imageUri: Uri? = null
     private var savedImagePath: String? = null
 
-    // Получение широты и долготы из Intent
     private var latitude: Double = 0.0
     private var longitude: Double = 0.0
 
@@ -52,11 +51,9 @@ class CreateActivity : ComponentActivity() {
         placeDescription = findViewById(R.id.placeDescription)
         addPlaceButton = findViewById(R.id.addPlaceButton)
 
-        // Получаем широту и долготу из Intent
         latitude = intent.getDoubleExtra("LATITUDE", 0.0)
         longitude = intent.getDoubleExtra("LONGITUDE", 0.0)
 
-        // Выводим в лог
         Log.d("CreateActivity", "Latitude: $latitude, Longitude: $longitude")
 
         addFileIcon.setOnClickListener {
@@ -70,8 +67,8 @@ class CreateActivity : ComponentActivity() {
             val title = placeName.text.toString().trim()
             val description = placeDescription.text.toString().trim()
 
-            if (title.isEmpty() || description.isEmpty() || savedImagePath == null) {
-                Toast.makeText(this, "Пожалуйста, заполните все поля", Toast.LENGTH_SHORT).show()
+            if (title.isEmpty() || savedImagePath == null) {
+                Toast.makeText(this, "Пожалуйста, заполните название и добавьте изображение", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
