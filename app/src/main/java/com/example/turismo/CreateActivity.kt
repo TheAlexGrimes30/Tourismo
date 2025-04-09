@@ -26,6 +26,10 @@ class CreateActivity : ComponentActivity() {
     private var imageUri: Uri? = null
     private var savedImagePath: String? = null
 
+    // Получение широты и долготы из Intent
+    private var latitude: Double = 0.0
+    private var longitude: Double = 0.0
+
     private val pickImageLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -49,8 +53,8 @@ class CreateActivity : ComponentActivity() {
         addPlaceButton = findViewById(R.id.addPlaceButton)
 
         // Получаем широту и долготу из Intent
-        val latitude = intent.getDoubleExtra("LATITUDE", 0.0)
-        val longitude = intent.getDoubleExtra("LONGITUDE", 0.0)
+        latitude = intent.getDoubleExtra("LATITUDE", 0.0)
+        longitude = intent.getDoubleExtra("LONGITUDE", 0.0)
 
         // Выводим в лог
         Log.d("CreateActivity", "Latitude: $latitude, Longitude: $longitude")
@@ -72,7 +76,9 @@ class CreateActivity : ComponentActivity() {
             }
 
             val db = TourismoDatabase(this)
-            val rowId = db.insertItem(title, description, savedImagePath!!)
+            val rowId = db.insertItem(
+                title, description, savedImagePath!!, latitude, longitude
+            )
 
             if (rowId != -1L) {
                 Toast.makeText(this, "Место добавлено", Toast.LENGTH_SHORT).show()

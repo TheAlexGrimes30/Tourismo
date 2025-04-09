@@ -5,18 +5,19 @@ import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 
-class TourismoDatabase(context: Context) :
-    SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
+class TourismoDatabase(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
 
     companion object {
         private const val DATABASE_NAME = "tourism.db"
-        private const val DATABASE_VERSION = 1
+        private const val DATABASE_VERSION = 2
 
         const val TABLE_NAME = "items"
         const val COLUMN_ID = "id"
         const val COLUMN_TITLE = "title"
         const val COLUMN_DESCRIPTION = "description"
         const val COLUMN_IMAGE_PATH = "image_path"
+        const val COLUMN_LATITUDE = "latitude"
+        const val COLUMN_LONGITUDE = "longitude"
     }
 
     override fun onCreate(db: SQLiteDatabase) {
@@ -25,24 +26,42 @@ class TourismoDatabase(context: Context) :
                 $COLUMN_ID INTEGER PRIMARY KEY AUTOINCREMENT,
                 $COLUMN_TITLE TEXT,
                 $COLUMN_DESCRIPTION TEXT,
-                $COLUMN_IMAGE_PATH TEXT
+                $COLUMN_IMAGE_PATH TEXT,
+                $COLUMN_LATITUDE REAL,  
+                $COLUMN_LONGITUDE REAL 
             )
         """.trimIndent()
         db.execSQL(createTable)
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        db.execSQL("DROP TABLE IF EXISTS $TABLE_NAME")
-        onCreate(db)
+        if (oldVersion < 2) {
+            val alterTableLatitude = """
+                ALTER TABLE $TABLE_NAME 
+                ADD COLUMN $COLUMN_LATITUDE REAL;
+            """.trimIndent()
+            db.execSQL(alterTableLatitude)
+            val alterTableLongitude = """
+                ALTER TABLE $TABLE_NAME 
+                ADD COLUMN $COLUMN_LONGITUDE REAL;
+            """.trimIndent()
+            db.execSQL(alterTableLongitude)
+        }
     }
 
-    fun insertItem(title: String, description: String, imagePath: String): Long {
+    fun insertItem(
+        title: String, description: String, imagePath: String,
+        latitude: Double, longitude: Double
+    ): Long {
         val db = writableDatabase
         val values = ContentValues().apply {
             put(COLUMN_TITLE, title)
             put(COLUMN_DESCRIPTION, description)
             put(COLUMN_IMAGE_PATH, imagePath)
+            put(COLUMN_LATITUDE, latitude)
+            put(COLUMN_LONGITUDE, longitude)
         }
         return db.insert(TABLE_NAME, null, values)
     }
+
 }
