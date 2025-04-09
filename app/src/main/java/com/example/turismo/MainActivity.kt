@@ -1,5 +1,6 @@
 package com.example.turismo
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.widget.Button
@@ -21,7 +22,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -187,7 +187,7 @@ fun HomeScreen() {
                     LayoutInflater.from(ctx).inflate(R.layout.bottom_sheet_dialog, null).apply {
                         val addButton = findViewById<Button>(R.id.btn_add_location)
                         addButton.setOnClickListener {
-                            Toast.makeText(ctx, "Место добавлено", Toast.LENGTH_SHORT).show()
+                            ctx.startActivity(Intent(ctx, CreateActivity::class.java))
                             coroutineScope.launch {
                                 bottomSheetState.hide()
                             }
