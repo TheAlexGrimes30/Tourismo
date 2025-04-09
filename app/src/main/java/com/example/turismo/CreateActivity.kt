@@ -101,7 +101,7 @@ class CreateActivity : ComponentActivity() {
             null
         }
     }
-    
+
     private fun getFileName(uri: Uri): String? {
         var name: String? = null
         val cursor = contentResolver.query(uri, null, null, null, null)

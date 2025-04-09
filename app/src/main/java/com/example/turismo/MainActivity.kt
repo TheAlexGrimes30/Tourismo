@@ -17,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -166,7 +167,7 @@ fun BottomNavigationBar(selectedTab: Int, onTabSelected: (Int) -> Unit) {
 @Composable
 fun HomeScreen() {
     val context = LocalContext.current
-    var showBottomSheet by remember { mutableStateOf(false) }
+    var showBottomSheet by rememberSaveable { mutableStateOf(false) } // Use rememberSaveable to persist the state
 
     val bottomSheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true,
@@ -175,10 +176,11 @@ fun HomeScreen() {
 
     val coroutineScope = rememberCoroutineScope()
 
+    // Ensure the bottom sheet can be dismissed correctly after adding an item
     if (showBottomSheet) {
         ModalBottomSheet(
             onDismissRequest = {
-                showBottomSheet = false
+                showBottomSheet = false // Hide the bottom sheet when dismissed
             },
             sheetState = bottomSheetState,
         ) {
@@ -187,9 +189,11 @@ fun HomeScreen() {
                     LayoutInflater.from(ctx).inflate(R.layout.bottom_sheet_dialog, null).apply {
                         val addButton = findViewById<Button>(R.id.btn_add_location)
                         addButton.setOnClickListener {
+                            // Start new activity and dismiss the bottom sheet
                             ctx.startActivity(Intent(ctx, CreateActivity::class.java))
                             coroutineScope.launch {
                                 bottomSheetState.hide()
+                                showBottomSheet = false // Hide the bottom sheet after the action
                             }
                         }
                     }
@@ -199,11 +203,16 @@ fun HomeScreen() {
         }
     }
 
+    // Allow for clicking again after dismissing
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.LightGray)
-            .clickable { showBottomSheet = true },
+            .clickable {
+                if (!showBottomSheet) { 
+                    showBottomSheet = true
+                }
+            },
         contentAlignment = Alignment.Center
     ) {
         Text(
@@ -212,6 +221,7 @@ fun HomeScreen() {
         )
     }
 }
+
 
 
 @Composable
