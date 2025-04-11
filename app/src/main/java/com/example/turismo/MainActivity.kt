@@ -256,7 +256,7 @@ fun HistoryScreen() {
         val intent = Intent(context, ListActivity::class.java)
         context.startActivity(intent)
     }
-    
+
     Box(modifier = Modifier.fillMaxSize()) {}
 }
 
