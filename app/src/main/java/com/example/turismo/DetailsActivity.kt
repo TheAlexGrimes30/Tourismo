@@ -1,5 +1,6 @@
 package com.example.turismo
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
@@ -27,31 +28,33 @@ class DetailsActivity : AppCompatActivity() {
             val item = database.getItemByTitle(title)
 
             if (item != null) {
-                // Set initial values
                 titleView.text = item.title
                 Glide.with(this).load(item.imagePath).into(imageView)
                 descriptionView.setText(item.description ?: "Описание недоступно")
 
-                // Handle update button click
                 updateButton.setOnClickListener {
                     val newTitle = titleView.text.toString()
                     val newDescription = descriptionView.text.toString()
 
-                    // Update item in the database
                     val rowsUpdated = database.updateItem(
                         item.id,
                         newTitle,
                         newDescription,
-                        item.imagePath,  // Assuming the image path doesn't change
-                        item.latitude,   // Keep the latitude as it is
-                        item.longitude   // Keep the longitude as it is
+                        item.imagePath,
+                        item.latitude,
+                        item.longitude
                     )
 
                     if (rowsUpdated > 0) {
                         Log.d("DetailsActivity", "Item updated successfully")
+
+                        val intent = Intent(this@DetailsActivity, ListActivity::class.java)
+                        startActivity(intent)
+                        finish() 
                     } else {
                         Log.d("DetailsActivity", "Failed to update item")
                     }
+
                 }
             } else {
                 Log.d("DetailsActivity", "Item not found")
