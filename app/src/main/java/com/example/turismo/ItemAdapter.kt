@@ -10,8 +10,10 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.turismo.models.Item
 
-class ItemAdapter(private val items: List<Item>) :
-    RecyclerView.Adapter<ItemAdapter.ItemViewHolder>() {
+class ItemAdapter(
+    private val items: MutableList<Item>,
+    private val onItemDeleted: (Item) -> Unit
+) : RecyclerView.Adapter<ItemAdapter.ItemViewHolder>() {
 
     class ItemViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val placeImage: ImageView = itemView.findViewById(R.id.placeImage)
@@ -43,4 +45,11 @@ class ItemAdapter(private val items: List<Item>) :
     }
 
     override fun getItemCount(): Int = items.size
+
+    fun removeItem(position: Int) {
+        val item = items[position]
+        items.removeAt(position)
+        notifyItemRemoved(position)
+        onItemDeleted(item)
+    }
 }

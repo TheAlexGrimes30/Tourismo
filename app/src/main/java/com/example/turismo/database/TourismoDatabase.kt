@@ -132,4 +132,9 @@ class TourismoDatabase(context: Context) : SQLiteOpenHelper(context, DATABASE_NA
         return db.update(TABLE_NAME, values, "$COLUMN_ID = ?", arrayOf(id.toString()))
     }
 
+    fun deleteItemById(id: Int): Int {
+        val db = writableDatabase
+        return db.delete(TABLE_NAME, "$COLUMN_ID = ?", arrayOf(id.toString()))
+    }
+
 }
