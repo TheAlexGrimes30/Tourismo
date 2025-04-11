@@ -250,10 +250,16 @@ fun WeatherScreen() {
 
 @Composable
 fun HistoryScreen() {
-    Box(modifier = Modifier.fillMaxSize().background(Color(0xFFFFE4B5))) {
-        Text(text = "История посещений", modifier = Modifier.padding(16.dp))
+    val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        val intent = Intent(context, ListActivity::class.java)
+        context.startActivity(intent)
     }
+    
+    Box(modifier = Modifier.fillMaxSize()) {}
 }
+
 
 @Preview(showBackground = true)
 @Composable

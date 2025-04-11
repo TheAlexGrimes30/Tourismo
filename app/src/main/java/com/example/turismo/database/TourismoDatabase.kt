@@ -4,6 +4,7 @@ import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import com.example.turismo.models.Item
 
 class TourismoDatabase(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
 
@@ -59,11 +60,35 @@ class TourismoDatabase(context: Context) : SQLiteOpenHelper(context, DATABASE_NA
         val db = writableDatabase
         val values = ContentValues().apply {
             put(COLUMN_TITLE, title)
-            put(COLUMN_DESCRIPTION, description) // Можно быть пустым
+            put(COLUMN_DESCRIPTION, description)
             put(COLUMN_IMAGE_PATH, imagePath)
             put(COLUMN_LATITUDE, latitude)
             put(COLUMN_LONGITUDE, longitude)
         }
         return db.insert(TABLE_NAME, null, values)
     }
+
+    fun getAllItems(): List<Item> {
+        val itemList = mutableListOf<Item>()
+        val db = readableDatabase
+        val cursor = db.rawQuery("SELECT * FROM $TABLE_NAME", null)
+
+        if (cursor.moveToFirst()) {
+            do {
+                val item = Item(
+                    id = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID)),
+                    title = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TITLE)),
+                    description = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DESCRIPTION)),
+                    imagePath = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_IMAGE_PATH)),
+                    latitude = cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_LATITUDE)),
+                    longitude = cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_LONGITUDE))
+                )
+                itemList.add(item)
+            } while (cursor.moveToNext())
+        }
+
+        cursor.close()
+        return itemList
+    }
+
 }
