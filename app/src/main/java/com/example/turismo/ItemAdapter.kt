@@ -1,5 +1,6 @@
 package com.example.turismo
 
+import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -31,6 +32,14 @@ class ItemAdapter(private val items: List<Item>) :
             .load(item.imagePath)
             .placeholder(R.drawable.image1)
             .into(holder.placeImage)
+
+        holder.itemView.setOnClickListener {
+            val context = holder.itemView.context
+            val intent = Intent(context, DetailsActivity::class.java)
+            intent.putExtra("place_name", item.title)
+            intent.putExtra("image_url", item.imagePath)
+            context.startActivity(intent)
+        }
     }
 
     override fun getItemCount(): Int = items.size

@@ -15,7 +15,7 @@
         android:orientation="horizontal"
         android:padding="16dp"
         android:gravity="center_vertical"
-        android:background="@android:color/white"> 
+        android:background="@android:color/white">
 
         <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/placeImage"
