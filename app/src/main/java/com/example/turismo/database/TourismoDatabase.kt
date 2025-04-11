@@ -91,4 +91,25 @@ class TourismoDatabase(context: Context) : SQLiteOpenHelper(context, DATABASE_NA
         return itemList
     }
 
+    fun getItemByTitle(title: String): Item? {
+        val db = readableDatabase
+        val cursor = db.rawQuery("SELECT * FROM $TABLE_NAME WHERE $COLUMN_TITLE = ?", arrayOf(title))
+
+        if (cursor.moveToFirst()) {
+            val item = Item(
+                id = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID)),
+                title = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TITLE)),
+                description = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DESCRIPTION)),
+                imagePath = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_IMAGE_PATH)),
+                latitude = cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_LATITUDE)),
+                longitude = cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_LONGITUDE))
+            )
+            cursor.close()
+            return item
+        }
+
+        cursor.close()
+        return null
+    }
+
 }

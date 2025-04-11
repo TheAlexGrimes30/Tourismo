@@ -1,6 +1,7 @@
 package com.example.turismo
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -18,6 +19,10 @@ class ListActivity : AppCompatActivity() {
 
         val db = TourismoDatabase(this)
         val itemList = db.getAllItems()
+
+        for (item in itemList) {
+            Log.d("DB_LOG", "Item: $item")
+        }
 
         val adapter = ItemAdapter(itemList)
         recyclerView.adapter = adapter
