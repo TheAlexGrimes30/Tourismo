@@ -50,7 +50,7 @@ class DetailsActivity : AppCompatActivity() {
 
                         val intent = Intent(this@DetailsActivity, ListActivity::class.java)
                         startActivity(intent)
-                        finish() 
+                        finish()
                     } else {
                         Log.d("DetailsActivity", "Failed to update item")
                     }
