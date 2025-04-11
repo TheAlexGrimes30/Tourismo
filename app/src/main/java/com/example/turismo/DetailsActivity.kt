@@ -2,6 +2,7 @@ package com.example.turismo
 
 import android.os.Bundle
 import android.util.Log
+import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
@@ -16,35 +17,48 @@ class DetailsActivity : AppCompatActivity() {
 
         val title = intent.getStringExtra("place_name")
 
+        val titleView: TextView = findViewById(R.id.textView2)
+        val imageView: ImageView = findViewById(R.id.image1)
+        val descriptionView: EditText = findViewById(R.id.placeDescription)
+        val updateButton: Button = findViewById(R.id.updateButton)
+
         if (title != null && title.isNotEmpty()) {
             val database = TourismoDatabase(this)
             val item = database.getItemByTitle(title)
 
             if (item != null) {
-                Log.d("DetailsActivity", "Title: ${item.title}")
-                Log.d("DetailsActivity", "Image URL: ${item.imagePath}")
-                Log.d("DetailsActivity", "Description: ${item.description}")
-
-                val titleView: TextView = findViewById(R.id.textView2)
-                val imageView: ImageView = findViewById(R.id.image1)
-                val descriptionView: EditText = findViewById(R.id.placeDescription)
-
+                // Set initial values
                 titleView.text = item.title
-
-                Glide.with(this)
-                    .load(item.imagePath)
-                    .placeholder(R.drawable.image1)
-                    .into(imageView)
-
+                Glide.with(this).load(item.imagePath).into(imageView)
                 descriptionView.setText(item.description ?: "Описание недоступно")
+
+                // Handle update button click
+                updateButton.setOnClickListener {
+                    val newTitle = titleView.text.toString()
+                    val newDescription = descriptionView.text.toString()
+
+                    // Update item in the database
+                    val rowsUpdated = database.updateItem(
+                        item.id,
+                        newTitle,
+                        newDescription,
+                        item.imagePath,  // Assuming the image path doesn't change
+                        item.latitude,   // Keep the latitude as it is
+                        item.longitude   // Keep the longitude as it is
+                    )
+
+                    if (rowsUpdated > 0) {
+                        Log.d("DetailsActivity", "Item updated successfully")
+                    } else {
+                        Log.d("DetailsActivity", "Failed to update item")
+                    }
+                }
             } else {
                 Log.d("DetailsActivity", "Item not found")
-                val descriptionView: EditText = findViewById(R.id.placeDescription)
                 descriptionView.setText("Место не найдено")
             }
         } else {
             Log.d("DetailsActivity", "Invalid title")
-            val descriptionView: EditText = findViewById(R.id.placeDescription)
             descriptionView.setText("Ошибка: название не задано")
         }
     }

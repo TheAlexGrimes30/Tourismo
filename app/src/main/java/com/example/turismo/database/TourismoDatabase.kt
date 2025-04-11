@@ -112,4 +112,24 @@ class TourismoDatabase(context: Context) : SQLiteOpenHelper(context, DATABASE_NA
         return null
     }
 
+    fun updateItem(
+        id: Int,
+        title: String,
+        description: String,
+        imagePath: String,
+        latitude: Double,
+        longitude: Double
+    ): Int {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put(COLUMN_TITLE, title)
+            put(COLUMN_DESCRIPTION, description)
+            put(COLUMN_IMAGE_PATH, imagePath)
+            put(COLUMN_LATITUDE, latitude)
+            put(COLUMN_LONGITUDE, longitude)
+        }
+
+        return db.update(TABLE_NAME, values, "$COLUMN_ID = ?", arrayOf(id.toString()))
+    }
+
 }

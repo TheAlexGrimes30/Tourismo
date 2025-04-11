@@ -36,8 +36,8 @@
 
     <EditText
         android:id="@+id/placeDescription"
-        android:layout_width="362dp"
-        android:layout_height="369dp"
+        android:layout_width="354dp"
+        android:layout_height="304dp"
         android:layout_marginStart="16dp"
         android:layout_marginTop="20dp"
         android:layout_marginEnd="16dp"
@@ -45,15 +45,28 @@
         android:background="@android:drawable/edit_text"
         android:gravity="top"
         android:hint="Введите описание места (0/500)"
-        android:textColorHint="#000000" 
-    android:inputType="textMultiLine"
-    android:maxLength="500"
-    android:padding="12dp"
-    android:textSize="16sp"
-    android:textColor="#000000"
-    app:layout_constraintBottom_toBottomOf="parent"
-    app:layout_constraintEnd_toEndOf="parent"
-    app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintTop_toBottomOf="@id/image1" />
+        android:inputType="textMultiLine"
+        android:maxLength="500"
+        android:padding="12dp"
+        android:textColor="#000000"
+        android:textColorHint="#000000"
+        android:textSize="16sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.48"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/image1"
+        app:layout_constraintVertical_bias="0.0" />
+
+    <Button
+        android:id="@+id/updateButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="36dp"
+        android:text="Update"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/placeDescription" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
