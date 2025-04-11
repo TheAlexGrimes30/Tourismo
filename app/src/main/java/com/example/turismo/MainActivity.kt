@@ -6,8 +6,10 @@ import android.view.LayoutInflater
 import android.widget.Button
 import android.widget.TextView
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -111,7 +113,7 @@ fun MainScreen() {
             when (selectedTab) {
                 0 -> HomeScreen()
                 1 -> WeatherScreen()
-                2 -> HistoryScreen()
+                2 -> HistoryScreen(onReturnToHome = { selectedTab = 0 })
             }
         }
 
@@ -127,39 +129,21 @@ fun BottomNavigationBar(selectedTab: Int, onTabSelected: (Int) -> Unit) {
             onClick = { onTabSelected(0) },
             icon = { Text("🏠", color = if (selectedTab == 0) Color.White else Color.Gray) },
             label = { Text("Home", color = if (selectedTab == 0) Color.White else Color.Gray) },
-            colors = NavigationBarItemDefaults.colors(
-                indicatorColor = Color.Black,
-                selectedIconColor = Color.White,
-                selectedTextColor = Color.White,
-                unselectedIconColor = Color.Gray,
-                unselectedTextColor = Color.Gray
-            )
+            colors = NavigationBarItemDefaults.colors()
         )
         NavigationBarItem(
             selected = selectedTab == 1,
             onClick = { onTabSelected(1) },
             icon = { Text("⛅", color = if (selectedTab == 1) Color.White else Color.Gray) },
             label = { Text("Weather", color = if (selectedTab == 1) Color.White else Color.Gray) },
-            colors = NavigationBarItemDefaults.colors(
-                indicatorColor = Color.Black,
-                selectedIconColor = Color.White,
-                selectedTextColor = Color.White,
-                unselectedIconColor = Color.Gray,
-                unselectedTextColor = Color.Gray
-            )
+            colors = NavigationBarItemDefaults.colors()
         )
         NavigationBarItem(
             selected = selectedTab == 2,
             onClick = { onTabSelected(2) },
             icon = { Text("📜", color = if (selectedTab == 2) Color.White else Color.Gray) },
             label = { Text("History", color = if (selectedTab == 2) Color.White else Color.Gray) },
-            colors = NavigationBarItemDefaults.colors(
-                indicatorColor = Color.Black,
-                selectedIconColor = Color.White,
-                selectedTextColor = Color.White,
-                unselectedIconColor = Color.Gray,
-                unselectedTextColor = Color.Gray
-            )
+            colors = NavigationBarItemDefaults.colors()
         )
     }
 }
@@ -249,17 +233,21 @@ fun WeatherScreen() {
 }
 
 @Composable
-fun HistoryScreen() {
+fun HistoryScreen(onReturnToHome: () -> Unit) {
     val context = LocalContext.current
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        onReturnToHome()
+    }
 
     LaunchedEffect(Unit) {
         val intent = Intent(context, ListActivity::class.java)
-        context.startActivity(intent)
+        launcher.launch(intent)
     }
 
     Box(modifier = Modifier.fillMaxSize()) {}
 }
-
 
 @Preview(showBackground = true)
 @Composable
