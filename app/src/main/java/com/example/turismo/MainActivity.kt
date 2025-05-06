@@ -36,6 +36,8 @@ import com.yandex.mapkit.map.InputListener
 import com.yandex.mapkit.map.MapWindow
 import com.yandex.mapkit.mapview.MapView
 import kotlinx.coroutines.launch
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsControllerCompat
 
 class MainActivity : ComponentActivity() {
 
@@ -48,6 +50,10 @@ class MainActivity : ComponentActivity() {
         MapKitFactory.initialize(this)
 
         enableEdgeToEdge()
+
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        val controller = WindowInsetsControllerCompat(window, window.decorView)
+        controller.isAppearanceLightStatusBars = true
 
         setContent {
             TurismoTheme {
@@ -78,70 +84,119 @@ class MainActivity : ComponentActivity() {
 fun MainScreen() {
     var searchQuery by remember { mutableStateOf(TextFieldValue("")) }
     var selectedTab by remember { mutableStateOf(0) }
+    var selectedPoint by remember { mutableStateOf<Point?>(null) }
+    var showBottomSheet by rememberSaveable { mutableStateOf(false) }
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        Spacer(
-            modifier = Modifier
-                .height(32.dp)
-                .fillMaxWidth()
-                .background(Color.DarkGray)
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val bottomSheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true,
+        confirmValueChange = { true }
+    )
+
+    Box(modifier = Modifier.fillMaxSize()) {
+
+        YandexMapComponent(
+            modifier = Modifier.fillMaxSize(),
+            onMapClick = { point ->
+                selectedPoint = point
+                showBottomSheet = true
+            }
         )
 
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Color.LightGray)
-                .padding(top = 16.dp, start = 16.dp, end = 16.dp)
-        ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            Spacer(modifier = Modifier.height(32.dp))
+
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(Color.White)
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                contentAlignment = Alignment.CenterStart
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(Color.White)
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    contentAlignment = Alignment.CenterStart
                 ) {
-                    if (searchQuery.text.isEmpty()) {
-                        Text(
-                            text = "Search",
-                            color = Color.Gray,
-                            fontSize = 14.sp,
-                            modifier = Modifier.weight(1.2f),
-                            textAlign = TextAlign.Start
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        if (searchQuery.text.isEmpty()) {
+                            Text(
+                                text = "Search",
+                                color = Color.Gray,
+                                fontSize = 14.sp,
+                                modifier = Modifier.weight(1.2f),
+                                textAlign = TextAlign.Start
+                            )
+                        }
+                        BasicTextField(
+                            value = searchQuery,
+                            onValueChange = { searchQuery = it },
+                            modifier = Modifier.weight(6f)
+                        )
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = "Search Icon",
+                            tint = Color.Gray,
+                            modifier = Modifier.size(20.dp)
                         )
                     }
-                    BasicTextField(
-                        value = searchQuery,
-                        onValueChange = { searchQuery = it },
-                        modifier = Modifier.weight(6f)
-                    )
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = "Search Icon",
-                        tint = Color.Gray,
-                        modifier = Modifier.size(20.dp)
-                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            BottomNavigationBar(selectedTab) { selectedTab = it }
+        }
+
+        if (selectedTab == 1) {
+            WeatherScreen()
+        } else if (selectedTab == 2) {
+            HistoryScreen(onReturnToHome = { selectedTab = 0 })
+        }
+
+        if (showBottomSheet && selectedPoint != null) {
+            ModalBottomSheet(
+                onDismissRequest = {
+                    showBottomSheet = false
+                },
+                sheetState = bottomSheetState,
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text("Новая точка", style = MaterialTheme.typography.headlineSmall)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text("Широта: ${"%.6f".format(selectedPoint?.latitude)}")
+                    Text("Долгота: ${"%.6f".format(selectedPoint?.longitude)}")
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Button(
+                        onClick = {
+                            selectedPoint?.let { point ->
+                                val intent = Intent(context, CreateActivity::class.java).apply {
+                                    putExtra("LATITUDE", point.latitude)
+                                    putExtra("LONGITUDE", point.longitude)
+                                }
+                                context.startActivity(intent)
+                                coroutineScope.launch {
+                                    bottomSheetState.hide()
+                                    showBottomSheet = false
+                                }
+                            }
+                        }
+                    ) {
+                        Text("Добавить место")
+                    }
                 }
             }
         }
-
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxSize()
-        ) {
-            when (selectedTab) {
-                0 -> HomeScreen()
-                1 -> WeatherScreen()
-                2 -> HistoryScreen(onReturnToHome = { selectedTab = 0 })
-            }
-        }
-
-        BottomNavigationBar(selectedTab) { selectedTab = it }
     }
 }
 
@@ -261,9 +316,7 @@ fun HistoryScreen(onReturnToHome: () -> Unit) {
     val context = LocalContext.current
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        onReturnToHome()
-    }
+    ) { result -> onReturnToHome() }
 
     LaunchedEffect(Unit) {
         val intent = Intent(context, ListActivity::class.java)
@@ -285,14 +338,7 @@ fun BottomNavigationBar(selectedTab: Int, onTabSelected: (Int) -> Unit) {
                 selected = selectedTab == index,
                 onClick = { onTabSelected(index) },
                 icon = { Text(icon, color = if (selectedTab == index) Color.White else Color.Gray) },
-                label = { Text(label, color = if (selectedTab == index) Color.White else Color.Gray) },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = Color.White,
-                    unselectedIconColor = Color.Gray,
-                    selectedTextColor = Color.White,
-                    unselectedTextColor = Color.Gray,
-                    indicatorColor = Color.Black
-                )
+                label = { Text(label, color = if (selectedTab == index) Color.White else Color.Gray) }
             )
         }
     }
@@ -300,7 +346,7 @@ fun BottomNavigationBar(selectedTab: Int, onTabSelected: (Int) -> Unit) {
 
 @Preview(showBackground = true)
 @Composable
-fun MainScreenPreview() {
+fun DefaultPreview() {
     TurismoTheme {
         MainScreen()
     }
