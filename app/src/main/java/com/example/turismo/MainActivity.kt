@@ -1,6 +1,7 @@
 package com.example.turismo
 
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -27,6 +28,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.app.ActivityCompat
 import com.example.turismo.ui.theme.TurismoTheme
 import com.yandex.mapkit.Animation
 import com.yandex.mapkit.MapKitFactory
@@ -38,6 +40,7 @@ import com.yandex.mapkit.mapview.MapView
 import kotlinx.coroutines.launch
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import com.google.android.gms.location.LocationServices
 
 class MainActivity : ComponentActivity() {
 
@@ -203,7 +206,8 @@ fun MainScreen() {
 @Composable
 fun YandexMapComponent(
     modifier: Modifier = Modifier,
-    onMapClick: (Point) -> Unit = {}
+    onMapClick: (Point) -> Unit = {},
+    moveToUserLocation: Boolean = false
 ) {
     val context = LocalContext.current
     var mapView by remember { mutableStateOf<MapView?>(null) }
@@ -213,26 +217,44 @@ fun YandexMapComponent(
             MapView(ctx).apply {
                 mapView = this
 
-                val mapWindow: MapWindow = this.mapWindow
+                val map = this.mapWindow.map
 
-                mapWindow.map.move(
+                map.move(
                     CameraPosition(Point(55.751574, 37.573856), 11.0f, 0.0f, 0.0f),
                     Animation(Animation.Type.SMOOTH, 1f),
                     null
                 )
 
-                mapWindow.map.addInputListener(object : InputListener {
+                map.addInputListener(object : InputListener {
                     override fun onMapTap(map: com.yandex.mapkit.map.Map, point: Point) {
                         onMapClick(point)
                     }
 
-                    override fun onMapLongTap(map: com.yandex.mapkit.map.Map, point: Point) {
-                    }
+                    override fun onMapLongTap(map: com.yandex.mapkit.map.Map, point: Point) {}
                 })
+
+                if (moveToUserLocation) {
+                    val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+                    if (ActivityCompat.checkSelfPermission(
+                            context,
+                            android.Manifest.permission.ACCESS_FINE_LOCATION
+                        ) == PackageManager.PERMISSION_GRANTED
+                    ) {
+                        fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                            location?.let {
+                                val userPoint = Point(it.latitude, it.longitude)
+                                map.move(
+                                    CameraPosition(userPoint, 15.0f, 0.0f, 0.0f),
+                                    Animation(Animation.Type.SMOOTH, 1f),
+                                    null
+                                )
+                            }
+                        }
+                    }
+                }
             }
         },
-        modifier = modifier.fillMaxSize(),
-        update = { view ->  }
+        modifier = modifier.fillMaxSize()
     )
 
     DisposableEffect(Unit) {
@@ -300,7 +322,8 @@ fun HomeScreen() {
         onMapClick = { point ->
             selectedPoint = point
             showBottomSheet = true
-        }
+        },
+        moveToUserLocation = true
     )
 }
 
