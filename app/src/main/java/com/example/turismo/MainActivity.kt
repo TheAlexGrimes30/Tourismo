@@ -2,16 +2,12 @@ package com.example.turismo
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.widget.Button
-import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -32,18 +28,48 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.example.turismo.ui.theme.TurismoTheme
+import com.yandex.mapkit.Animation
+import com.yandex.mapkit.MapKitFactory
+import com.yandex.mapkit.geometry.Point
+import com.yandex.mapkit.map.CameraPosition
+import com.yandex.mapkit.map.InputListener
+import com.yandex.mapkit.map.MapWindow
+import com.yandex.mapkit.mapview.MapView
 import kotlinx.coroutines.launch
-import kotlin.random.Random
 
 class MainActivity : ComponentActivity() {
+
+    private lateinit var mapView: MapView
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        MapKitFactory.setApiKey("04b285be-eee6-45c5-8a1f-acfb37111273")
+        MapKitFactory.initialize(this)
+
         enableEdgeToEdge()
+
         setContent {
             TurismoTheme {
                 MainScreen()
             }
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        MapKitFactory.getInstance().onStart()
+        if (::mapView.isInitialized) {
+            mapView.onStart()
+        }
+    }
+
+    override fun onStop() {
+        if (::mapView.isInitialized) {
+            mapView.onStop()
+        }
+        MapKitFactory.getInstance().onStop()
+        super.onStop()
     }
 }
 
@@ -54,7 +80,6 @@ fun MainScreen() {
     var selectedTab by remember { mutableStateOf(0) }
 
     Column(modifier = Modifier.fillMaxSize()) {
-
         Spacer(
             modifier = Modifier
                 .height(32.dp)
@@ -108,7 +133,6 @@ fun MainScreen() {
             modifier = Modifier
                 .weight(1f)
                 .fillMaxSize()
-                .background(Color.LightGray)
         ) {
             when (selectedTab) {
                 0 -> HomeScreen()
@@ -122,48 +146,44 @@ fun MainScreen() {
 }
 
 @Composable
-fun BottomNavigationBar(selectedTab: Int, onTabSelected: (Int) -> Unit) {
-    NavigationBar(containerColor = Color.Black) {
-        NavigationBarItem(
-            selected = selectedTab == 0,
-            onClick = { onTabSelected(0) },
-            icon = { Text("🏠", color = if (selectedTab == 0) Color.White else Color.Gray) },
-            label = { Text("Home", color = if (selectedTab == 0) Color.White else Color.Gray) },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = Color.White,
-                unselectedIconColor = Color.Gray,
-                selectedTextColor = Color.White,
-                unselectedTextColor = Color.Gray,
-                indicatorColor = Color.Black
-            )
+fun YandexMapComponent(
+    modifier: Modifier = Modifier,
+    onMapClick: (Point) -> Unit = {}
+) {
+    val context = LocalContext.current
+    var mapView by remember { mutableStateOf<MapView?>(null) }
 
-        )
-        NavigationBarItem(
-            selected = selectedTab == 1,
-            onClick = { onTabSelected(1) },
-            icon = { Text("⛅", color = if (selectedTab == 1) Color.White else Color.Gray) },
-            label = { Text("Weather", color = if (selectedTab == 1) Color.White else Color.Gray) },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = Color.White,
-                unselectedIconColor = Color.Gray,
-                selectedTextColor = Color.White,
-                unselectedTextColor = Color.Gray,
-                indicatorColor = Color.Black
-            )
-        )
-        NavigationBarItem(
-            selected = selectedTab == 2,
-            onClick = { onTabSelected(2) },
-            icon = { Text("📜", color = if (selectedTab == 2) Color.White else Color.Gray) },
-            label = { Text("History", color = if (selectedTab == 2) Color.White else Color.Gray) },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = Color.White,
-                unselectedIconColor = Color.Gray,
-                selectedTextColor = Color.White,
-                unselectedTextColor = Color.Gray,
-                indicatorColor = Color.Black
-            )
-        )
+    AndroidView(
+        factory = { ctx ->
+            MapView(ctx).apply {
+                mapView = this
+
+                val mapWindow: MapWindow = this.mapWindow
+
+                mapWindow.map.move(
+                    CameraPosition(Point(55.751574, 37.573856), 11.0f, 0.0f, 0.0f),
+                    Animation(Animation.Type.SMOOTH, 1f),
+                    null
+                )
+
+                mapWindow.map.addInputListener(object : InputListener {
+                    override fun onMapTap(map: com.yandex.mapkit.map.Map, point: Point) {
+                        onMapClick(point)
+                    }
+
+                    override fun onMapLongTap(map: com.yandex.mapkit.map.Map, point: Point) {
+                    }
+                })
+            }
+        },
+        modifier = modifier.fillMaxSize(),
+        update = { view ->  }
+    )
+
+    DisposableEffect(Unit) {
+        onDispose {
+            mapView?.onStop()
+        }
     }
 }
 
@@ -172,9 +192,7 @@ fun BottomNavigationBar(selectedTab: Int, onTabSelected: (Int) -> Unit) {
 fun HomeScreen() {
     val context = LocalContext.current
     var showBottomSheet by rememberSaveable { mutableStateOf(false) }
-
-    val latitude = remember { mutableStateOf(0.0) }
-    val longitude = remember { mutableStateOf(0.0) }
+    var selectedPoint by remember { mutableStateOf<Point?>(null) }
 
     val bottomSheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true,
@@ -183,65 +201,52 @@ fun HomeScreen() {
 
     val coroutineScope = rememberCoroutineScope()
 
-    val generateRandomCoordinates: () -> Unit = {
-        latitude.value = Random.nextDouble(-90.0, 90.0)
-        longitude.value = Random.nextDouble(-180.0, 180.0)
-    }
-
-    if (showBottomSheet) {
+    if (showBottomSheet && selectedPoint != null) {
         ModalBottomSheet(
             onDismissRequest = {
                 showBottomSheet = false
             },
             sheetState = bottomSheetState,
         ) {
-            AndroidView(
-                factory = { ctx ->
-                    LayoutInflater.from(ctx).inflate(R.layout.bottom_sheet_dialog, null).apply {
-                        val latitudeTextView = findViewById<TextView>(R.id.latitude_value)
-                        val longitudeTextView = findViewById<TextView>(R.id.longitude_value)
-
-                        generateRandomCoordinates()
-
-                        latitudeTextView.text = latitude.value.toString()
-                        longitudeTextView.text = longitude.value.toString()
-
-                        val addButton = findViewById<Button>(R.id.btn_add_location)
-                        addButton.setOnClickListener {
-                            val intent = Intent(ctx, CreateActivity::class.java).apply {
-                                putExtra("LATITUDE", latitude.value)
-                                putExtra("LONGITUDE", longitude.value)
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text("Новая точка", style = MaterialTheme.typography.headlineSmall)
+                Spacer(modifier = Modifier.height(16.dp))
+                Text("Широта: ${"%.6f".format(selectedPoint?.latitude)}")
+                Text("Долгота: ${"%.6f".format(selectedPoint?.longitude)}")
+                Spacer(modifier = Modifier.height(24.dp))
+                Button(
+                    onClick = {
+                        selectedPoint?.let { point ->
+                            val intent = Intent(context, CreateActivity::class.java).apply {
+                                putExtra("LATITUDE", point.latitude)
+                                putExtra("LONGITUDE", point.longitude)
                             }
-                            ctx.startActivity(intent)
-
+                            context.startActivity(intent)
                             coroutineScope.launch {
                                 bottomSheetState.hide()
                                 showBottomSheet = false
                             }
                         }
                     }
-                },
-                modifier = Modifier.fillMaxWidth()
-            )
+                ) {
+                    Text("Добавить место")
+                }
+            }
         }
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.LightGray)
-            .clickable {
-                if (!showBottomSheet) {
-                    showBottomSheet = true
-                }
-            },
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = "Здесь будет карта (нажми, чтобы добавить место)",
-            modifier = Modifier.padding(16.dp)
-        )
-    }
+    YandexMapComponent(
+        modifier = Modifier.fillMaxSize(),
+        onMapClick = { point ->
+            selectedPoint = point
+            showBottomSheet = true
+        }
+    )
 }
 
 @Composable
@@ -266,6 +271,31 @@ fun HistoryScreen(onReturnToHome: () -> Unit) {
     }
 
     Box(modifier = Modifier.fillMaxSize()) {}
+}
+
+@Composable
+fun BottomNavigationBar(selectedTab: Int, onTabSelected: (Int) -> Unit) {
+    NavigationBar(containerColor = Color.Black) {
+        listOf(
+            "🏠" to "Home",
+            "⛅" to "Weather",
+            "📜" to "History"
+        ).forEachIndexed { index, (icon, label) ->
+            NavigationBarItem(
+                selected = selectedTab == index,
+                onClick = { onTabSelected(index) },
+                icon = { Text(icon, color = if (selectedTab == index) Color.White else Color.Gray) },
+                label = { Text(label, color = if (selectedTab == index) Color.White else Color.Gray) },
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = Color.White,
+                    unselectedIconColor = Color.Gray,
+                    selectedTextColor = Color.White,
+                    unselectedTextColor = Color.Gray,
+                    indicatorColor = Color.Black
+                )
+            )
+        }
+    }
 }
 
 @Preview(showBackground = true)
