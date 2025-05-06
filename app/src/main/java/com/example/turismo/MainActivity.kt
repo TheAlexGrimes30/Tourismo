@@ -129,21 +129,40 @@ fun BottomNavigationBar(selectedTab: Int, onTabSelected: (Int) -> Unit) {
             onClick = { onTabSelected(0) },
             icon = { Text("🏠", color = if (selectedTab == 0) Color.White else Color.Gray) },
             label = { Text("Home", color = if (selectedTab == 0) Color.White else Color.Gray) },
-            colors = NavigationBarItemDefaults.colors()
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = Color.White,
+                unselectedIconColor = Color.Gray,
+                selectedTextColor = Color.White,
+                unselectedTextColor = Color.Gray,
+                indicatorColor = Color.Black
+            )
+
         )
         NavigationBarItem(
             selected = selectedTab == 1,
             onClick = { onTabSelected(1) },
             icon = { Text("⛅", color = if (selectedTab == 1) Color.White else Color.Gray) },
             label = { Text("Weather", color = if (selectedTab == 1) Color.White else Color.Gray) },
-            colors = NavigationBarItemDefaults.colors()
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = Color.White,
+                unselectedIconColor = Color.Gray,
+                selectedTextColor = Color.White,
+                unselectedTextColor = Color.Gray,
+                indicatorColor = Color.Black
+            )
         )
         NavigationBarItem(
             selected = selectedTab == 2,
             onClick = { onTabSelected(2) },
             icon = { Text("📜", color = if (selectedTab == 2) Color.White else Color.Gray) },
             label = { Text("History", color = if (selectedTab == 2) Color.White else Color.Gray) },
-            colors = NavigationBarItemDefaults.colors()
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = Color.White,
+                unselectedIconColor = Color.Gray,
+                selectedTextColor = Color.White,
+                unselectedTextColor = Color.Gray,
+                indicatorColor = Color.Black
+            )
         )
     }
 }
