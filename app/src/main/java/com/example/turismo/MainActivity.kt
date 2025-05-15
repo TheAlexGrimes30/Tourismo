@@ -3,6 +3,7 @@ package com.example.turismo
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -28,19 +29,27 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.example.turismo.ui.theme.TurismoTheme
 import com.yandex.mapkit.Animation
 import com.yandex.mapkit.MapKitFactory
 import com.yandex.mapkit.geometry.Point
 import com.yandex.mapkit.map.CameraPosition
 import com.yandex.mapkit.map.InputListener
-import com.yandex.mapkit.map.MapWindow
 import com.yandex.mapkit.mapview.MapView
 import kotlinx.coroutines.launch
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import com.google.android.gms.location.LocationServices
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.yandex.mapkit.user_location.UserLocationObjectListener
+import com.yandex.mapkit.user_location.UserLocationView
+import com.yandex.runtime.image.ImageProvider
+import android.Manifest
+import android.graphics.PointF
+import com.yandex.mapkit.layers.ObjectEvent
+import com.yandex.mapkit.map.IconStyle
 
 class MainActivity : ComponentActivity() {
 
@@ -210,59 +219,115 @@ fun YandexMapComponent(
     moveToUserLocation: Boolean = false
 ) {
     val context = LocalContext.current
-    var mapView by remember { mutableStateOf<MapView?>(null) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    val locationPermissions = arrayOf(
+        Manifest.permission.ACCESS_FINE_LOCATION,
+        Manifest.permission.ACCESS_COARSE_LOCATION
+    )
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val granted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true
+        if (!granted) {
+            Toast.makeText(context, "Необходимо разрешение на доступ к местоположению", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        val fineGranted = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+
+        val coarseGranted = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+
+        if (!fineGranted || !coarseGranted) {
+            permissionLauncher.launch(locationPermissions)
+        }
+    }
+
+    val mapView = remember {
+        MapView(context).apply {
+            mapWindow.map.move(
+                CameraPosition(Point(55.751574, 37.573856), 11f, 0f, 0f),
+                Animation(Animation.Type.SMOOTH, 1f),
+                null
+            )
+        }
+    }
+
+    DisposableEffect(lifecycleOwner) {
+        val lifecycle = lifecycleOwner.lifecycle
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_START -> mapView.onStart()
+                Lifecycle.Event.ON_STOP -> mapView.onStop()
+                else -> {}
+            }
+        }
+        lifecycle.addObserver(observer)
+        onDispose {
+            lifecycle.removeObserver(observer)
+        }
+    }
 
     AndroidView(
-        factory = { ctx ->
-            MapView(ctx).apply {
-                mapView = this
-
-                val map = this.mapWindow.map
-
-                map.move(
-                    CameraPosition(Point(55.751574, 37.573856), 11.0f, 0.0f, 0.0f),
-                    Animation(Animation.Type.SMOOTH, 1f),
-                    null
-                )
-
-                map.addInputListener(object : InputListener {
+        factory = {
+            mapView.apply {
+                mapWindow.map.addInputListener(object : InputListener {
                     override fun onMapTap(map: com.yandex.mapkit.map.Map, point: Point) {
+                        val placemark = map.mapObjects.addPlacemark(point)
+
+                        placemark.setIcon(
+                            ImageProvider.fromResource(context, R.drawable.add),
+                            IconStyle().apply {
+                                scale = 5.0f
+                                anchor = PointF(0.5f, 1.0f)
+                            }
+                        )
+
                         onMapClick(point)
                     }
 
                     override fun onMapLongTap(map: com.yandex.mapkit.map.Map, point: Point) {}
                 })
 
+                val mapKit = MapKitFactory.getInstance()
+                val userLocationLayer = mapKit.createUserLocationLayer(mapWindow).apply {
+                    isVisible = true
+                    isHeadingEnabled = true
+                }
+
                 if (moveToUserLocation) {
-                    val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
-                    if (ActivityCompat.checkSelfPermission(
-                            context,
-                            android.Manifest.permission.ACCESS_FINE_LOCATION
-                        ) == PackageManager.PERMISSION_GRANTED
-                    ) {
-                        fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-                            location?.let {
-                                val userPoint = Point(it.latitude, it.longitude)
-                                map.move(
-                                    CameraPosition(userPoint, 15.0f, 0.0f, 0.0f),
+                    userLocationLayer.setObjectListener(object : UserLocationObjectListener {
+                        override fun onObjectAdded(userLocationView: UserLocationView) {
+                            userLocationView.arrow?.geometry?.let { userLocation ->
+                                mapWindow.map.move(
+                                    CameraPosition(userLocation, 15f, 0f, 0f),
                                     Animation(Animation.Type.SMOOTH, 1f),
                                     null
                                 )
                             }
+                            userLocationLayer.setObjectListener(null)
                         }
-                    }
+
+                        override fun onObjectRemoved(view: UserLocationView) {}
+                        override fun onObjectUpdated(p0: UserLocationView, p1: ObjectEvent) {}
+                    })
                 }
             }
         },
         modifier = modifier.fillMaxSize()
     )
-
-    DisposableEffect(Unit) {
-        onDispose {
-            mapView?.onStop()
-        }
-    }
 }
+
+
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
