@@ -60,11 +60,11 @@ class MainActivity : ComponentActivity() {
 fun MainScreen() {
     var searchQuery by remember { mutableStateOf(TextFieldValue("")) }
     var selectedTab by remember { mutableStateOf(0) }
+    val context = LocalContext.current
 
     Box(modifier = Modifier.fillMaxSize()) {
         when (selectedTab) {
             0 -> MapScreen()
-            1 -> WeatherScreen()
             2 -> HistoryScreen(onReturnToHome = { selectedTab = 0 })
         }
 
@@ -114,7 +114,13 @@ fun MainScreen() {
             }
 
             Spacer(modifier = Modifier.weight(1f))
-            BottomNavigationBar(selectedTab) { selectedTab = it }
+            BottomNavigationBar(selectedTab) { newTab ->
+                if (newTab == 1) {
+                    context.startActivity(Intent(context, WheatherActivity::class.java))
+                } else {
+                    selectedTab = newTab
+                }
+            }
         }
     }
 }
