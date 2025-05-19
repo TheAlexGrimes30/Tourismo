@@ -79,6 +79,11 @@ class CreateActivity : ComponentActivity() {
 
             if (rowId != -1L) {
                 Toast.makeText(this, "Место добавлено", Toast.LENGTH_SHORT).show()
+
+                val resultIntent = Intent()
+                resultIntent.putExtra("PLACE_ADDED", true)
+                setResult(RESULT_OK, resultIntent)
+
                 finish()
             } else {
                 Toast.makeText(this, "Ошибка при добавлении", Toast.LENGTH_SHORT).show()

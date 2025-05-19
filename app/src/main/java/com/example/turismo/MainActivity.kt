@@ -1,5 +1,6 @@
 package com.example.turismo
 
+import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -8,6 +9,7 @@ import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -128,7 +130,6 @@ fun BottomNavigationBar(selectedTab: Int, onTabSelected: (Int) -> Unit) {
 @Composable
 fun MapScreen() {
     val context = LocalContext.current
-
     val dbHelper = remember { TourismoDatabase(context) }
 
     var showBottomSheet by rememberSaveable { mutableStateOf(false) }
@@ -136,20 +137,30 @@ fun MapScreen() {
     val longitude = remember { mutableStateOf(0.0) }
 
     val items = remember { mutableStateListOf<Item>() }
-
-    LaunchedEffect(Unit) {
-        val loadedItems = dbHelper.getAllItems()
-        items.clear()
-        items.addAll(loadedItems)
-    }
+    val coroutineScope = rememberCoroutineScope()
 
     val bottomSheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true,
         confirmValueChange = { true }
     )
 
-    val coroutineScope = rememberCoroutineScope()
     val mapView = remember { MapView(context) }
+    
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            coroutineScope.launch {
+                val updatedItems = dbHelper.getAllItems()
+                items.clear()
+                items.addAll(updatedItems)
+            }
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        val loadedItems = dbHelper.getAllItems()
+        items.clear()
+        items.addAll(loadedItems)
+    }
 
     DisposableEffect(Unit) {
         mapView.onStart()
@@ -215,7 +226,7 @@ fun MapScreen() {
                                 putExtra("LATITUDE", latitude.value)
                                 putExtra("LONGITUDE", longitude.value)
                             }
-                            ctx.startActivity(intent)
+                            launcher.launch(intent)
 
                             coroutineScope.launch {
                                 bottomSheetState.hide()
