@@ -62,63 +62,61 @@ fun MainScreen() {
     var searchQuery by remember { mutableStateOf(TextFieldValue("")) }
     var selectedTab by remember { mutableStateOf(0) }
 
-    Column(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        when (selectedTab) {
+            0 -> MapScreen()
+            1 -> WeatherScreen()
+            2 -> HistoryScreen(onReturnToHome = { selectedTab = 0 })
+        }
 
-        Box(
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .background(Color.LightGray)
-                .padding(horizontal = 16.dp, vertical = 16.dp)
+                .fillMaxSize()
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(Color.White)
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                contentAlignment = Alignment.CenterStart
+                    .padding(horizontal = 16.dp, vertical = 16.dp)
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(Color.White)
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    contentAlignment = Alignment.CenterStart
                 ) {
-                    if (searchQuery.text.isEmpty()) {
-                        Text(
-                            text = "Search",
-                            color = Color.Gray,
-                            fontSize = 14.sp,
-                            modifier = Modifier.weight(1.2f),
-                            textAlign = TextAlign.Start
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        if (searchQuery.text.isEmpty()) {
+                            Text(
+                                text = "Search",
+                                color = Color.Gray,
+                                fontSize = 14.sp,
+                                modifier = Modifier.weight(1.2f),
+                                textAlign = TextAlign.Start
+                            )
+                        }
+                        BasicTextField(
+                            value = searchQuery,
+                            onValueChange = { searchQuery = it },
+                            modifier = Modifier.weight(6f)
+                        )
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = "Search Icon",
+                            tint = Color.Gray,
+                            modifier = Modifier.size(20.dp)
                         )
                     }
-                    BasicTextField(
-                        value = searchQuery,
-                        onValueChange = { searchQuery = it },
-                        modifier = Modifier.weight(6f)
-                    )
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = "Search Icon",
-                        tint = Color.Gray,
-                        modifier = Modifier.size(20.dp)
-                    )
                 }
             }
-        }
 
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxSize()
-        ) {
-            when (selectedTab) {
-                0 -> MapScreen()
-                1 -> WeatherScreen()
-                2 -> HistoryScreen(onReturnToHome = { selectedTab = 0 })
-            }
+            Spacer(modifier = Modifier.weight(1f)) 
+            BottomNavigationBar(selectedTab) { selectedTab = it }
         }
-
-        BottomNavigationBar(selectedTab) { selectedTab = it }
     }
 }
 
