@@ -38,6 +38,7 @@ import com.yandex.mapkit.geometry.Point
 import com.yandex.mapkit.map.CameraPosition
 import com.yandex.mapkit.map.Map
 import com.yandex.mapkit.mapview.MapView
+import kotlinx.coroutines.delay
 
 class MainActivity : ComponentActivity() {
 
@@ -180,6 +181,8 @@ fun MapScreen() {
     val latitude = remember { mutableStateOf(0.0) }
     val longitude = remember { mutableStateOf(0.0) }
 
+    val markers = remember { mutableStateListOf<Point>() }
+
     val bottomSheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true,
         confirmValueChange = { true }
@@ -207,9 +210,7 @@ fun MapScreen() {
 
         val inputListener = object : com.yandex.mapkit.map.InputListener {
             override fun onMapTap(map: Map, point: Point) {
-                mapObjects.clear()
-                val placemark = mapObjects.addPlacemark(point)
-                placemark.setText("Маркер")
+                markers.add(point)
 
                 latitude.value = point.latitude
                 longitude.value = point.longitude
@@ -224,7 +225,20 @@ fun MapScreen() {
         onDispose {
             map.removeInputListener(inputListener)
             mapObjects.clear()
+            markers.clear()
         }
+    }
+
+    LaunchedEffect(markers) {
+        snapshotFlow { markers.toList() }
+            .collect { points ->
+                val mapObjects = mapView.map.mapObjects
+                mapObjects.clear()
+                points.forEachIndexed { index, point ->
+                    val placemark = mapObjects.addPlacemark(point)
+                    placemark.setText("Маркер ${index + 1}")
+                }
+            }
     }
 
     if (showBottomSheet) {
