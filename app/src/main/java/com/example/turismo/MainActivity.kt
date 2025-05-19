@@ -191,49 +191,41 @@ fun MapScreen() {
     val coroutineScope = rememberCoroutineScope()
 
     val mapView = remember { MapView(context) }
-
+    
     DisposableEffect(Unit) {
         mapView.onStart()
-
         onDispose {
             mapView.onStop()
         }
     }
 
-    val map = remember { mapView.map }
-    val mapObjects = remember { map.mapObjects }
-
-    val generateRandomCoordinates: () -> Unit = {
-        latitude.value = Random.nextDouble(-90.0, 90.0)
-        longitude.value = Random.nextDouble(-180.0, 180.0)
-    }
-
     DisposableEffect(Unit) {
+        val map = mapView.map
+        val mapObjects = map.mapObjects
+
         map.move(
             CameraPosition(Point(55.751244, 37.618423), 3.0f, 0.0f, 0.0f),
             Animation(Animation.Type.SMOOTH, 1f),
             null
         )
 
-        val onMapClickListener = object : com.yandex.mapkit.map.InputListener {
+        val inputListener = object : com.yandex.mapkit.map.InputListener {
             override fun onMapTap(map: Map, point: Point) {
                 mapObjects.clear()
                 mapObjects.addPlacemark(point)
 
                 latitude.value = point.latitude
                 longitude.value = point.longitude
-
-                generateRandomCoordinates()
                 showBottomSheet = true
             }
 
             override fun onMapLongTap(map: Map, point: Point) {}
         }
 
-        map.addInputListener(onMapClickListener)
+        map.addInputListener(inputListener)
 
         onDispose {
-            map.removeInputListener(onMapClickListener)
+            map.removeInputListener(inputListener)
             mapObjects.clear()
         }
     }
@@ -279,6 +271,7 @@ fun MapScreen() {
         )
     }
 }
+
 
 @Composable
 fun WeatherScreen() {
