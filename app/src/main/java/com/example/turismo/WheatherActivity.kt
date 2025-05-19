@@ -24,7 +24,6 @@ class WheatherActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_wheather)
 
-        // Обработка insets
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
@@ -34,13 +33,13 @@ class WheatherActivity : AppCompatActivity() {
         temperatureValue = findViewById(R.id.temperatureValue)
         weatherDescription = findViewById(R.id.weatherDescription)
         locationName = findViewById(R.id.locationName)
-        
+
         loadWeather()
     }
 
     private fun loadWeather() {
         CoroutineScope(Dispatchers.Main).launch {
-            val weatherData = fetchWeatherFromApi("Curitiba")
+            val weatherData = fetchWeatherFromApi("Bern")
             if (weatherData != null) {
                 temperatureValue.text = weatherData.temperature
                 weatherDescription.text = weatherData.description
