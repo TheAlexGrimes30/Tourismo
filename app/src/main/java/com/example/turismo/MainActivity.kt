@@ -10,35 +10,28 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.example.turismo.ui.theme.TurismoTheme
 import kotlinx.coroutines.launch
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import com.example.turismo.database.TourismoDatabase
+import com.example.turismo.models.Item
 import com.yandex.mapkit.Animation
 import com.yandex.mapkit.MapKitFactory
 import com.yandex.mapkit.geometry.Point
 import com.yandex.mapkit.map.CameraPosition
 import com.yandex.mapkit.map.Map
 import com.yandex.mapkit.mapview.MapView
-import kotlinx.coroutines.delay
 
 class MainActivity : ComponentActivity() {
 
@@ -135,12 +128,20 @@ fun BottomNavigationBar(selectedTab: Int, onTabSelected: (Int) -> Unit) {
 @Composable
 fun MapScreen() {
     val context = LocalContext.current
-    var showBottomSheet by rememberSaveable { mutableStateOf(false) }
 
+    val dbHelper = remember { TourismoDatabase(context) }
+
+    var showBottomSheet by rememberSaveable { mutableStateOf(false) }
     val latitude = remember { mutableStateOf(0.0) }
     val longitude = remember { mutableStateOf(0.0) }
 
-    val markers = remember { mutableStateListOf<Point>() }
+    val items = remember { mutableStateListOf<Item>() }
+
+    LaunchedEffect(Unit) {
+        val loadedItems = dbHelper.getAllItems()
+        items.clear()
+        items.addAll(loadedItems)
+    }
 
     val bottomSheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true,
@@ -169,8 +170,6 @@ fun MapScreen() {
 
         val inputListener = object : com.yandex.mapkit.map.InputListener {
             override fun onMapTap(map: Map, point: Point) {
-                markers.add(point)
-
                 latitude.value = point.latitude
                 longitude.value = point.longitude
                 showBottomSheet = true
@@ -184,18 +183,18 @@ fun MapScreen() {
         onDispose {
             map.removeInputListener(inputListener)
             mapObjects.clear()
-            markers.clear()
         }
     }
 
-    LaunchedEffect(markers) {
-        snapshotFlow { markers.toList() }
-            .collect { points ->
+    LaunchedEffect(items) {
+        snapshotFlow { items.toList() }
+            .collect { itemList ->
                 val mapObjects = mapView.map.mapObjects
                 mapObjects.clear()
-                points.forEachIndexed { index, point ->
+                itemList.forEach { item ->
+                    val point = Point(item.latitude, item.longitude)
                     val placemark = mapObjects.addPlacemark(point)
-                    placemark.setText("Маркер ${index + 1}")
+                    placemark.setText(item.title)
                 }
             }
     }
@@ -241,7 +240,6 @@ fun MapScreen() {
         )
     }
 }
-
 
 
 @Composable
