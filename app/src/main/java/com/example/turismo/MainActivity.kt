@@ -38,7 +38,6 @@ import com.yandex.mapkit.geometry.Point
 import com.yandex.mapkit.map.CameraPosition
 import com.yandex.mapkit.map.Map
 import com.yandex.mapkit.mapview.MapView
-import kotlin.random.Random
 
 class MainActivity : ComponentActivity() {
 
@@ -114,7 +113,7 @@ fun MainScreen() {
                 }
             }
 
-            Spacer(modifier = Modifier.weight(1f)) 
+            Spacer(modifier = Modifier.weight(1f))
             BottomNavigationBar(selectedTab) { selectedTab = it }
         }
     }
@@ -181,9 +180,8 @@ fun MapScreen() {
     )
 
     val coroutineScope = rememberCoroutineScope()
-
     val mapView = remember { MapView(context) }
-    
+
     DisposableEffect(Unit) {
         mapView.onStart()
         onDispose {
@@ -196,7 +194,7 @@ fun MapScreen() {
         val mapObjects = map.mapObjects
 
         map.move(
-            CameraPosition(Point(55.751244, 37.618423), 3.0f, 0.0f, 0.0f),
+            CameraPosition(Point(55.751244, 37.618423), 10.0f, 0.0f, 0.0f),
             Animation(Animation.Type.SMOOTH, 1f),
             null
         )
@@ -204,7 +202,8 @@ fun MapScreen() {
         val inputListener = object : com.yandex.mapkit.map.InputListener {
             override fun onMapTap(map: Map, point: Point) {
                 mapObjects.clear()
-                mapObjects.addPlacemark(point)
+                val placemark = mapObjects.addPlacemark(point)
+                placemark.setText("Маркер")
 
                 latitude.value = point.latitude
                 longitude.value = point.longitude
@@ -263,6 +262,7 @@ fun MapScreen() {
         )
     }
 }
+
 
 
 @Composable
