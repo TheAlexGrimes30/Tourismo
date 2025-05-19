@@ -62,7 +62,7 @@ dependencies {
     implementation("com.github.bumptech.glide:glide:4.16.0")
     kapt("com.github.bumptech.glide:compiler:4.16.0")
 
-    implementation ("com.yandex.android:maps.mobile:4.5.1-full")
+    implementation("com.yandex.android:maps.mobile:4.5.0-lite")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

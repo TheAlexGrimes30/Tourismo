@@ -1,14 +1,13 @@
 package com.example.turismo
 
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.os.Bundle
-import android.widget.Toast
+import android.view.LayoutInflater
+import android.widget.Button
+import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -29,31 +28,19 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.content.ContextCompat
 import com.example.turismo.ui.theme.TurismoTheme
+import kotlinx.coroutines.launch
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import com.yandex.mapkit.Animation
 import com.yandex.mapkit.MapKitFactory
 import com.yandex.mapkit.geometry.Point
 import com.yandex.mapkit.map.CameraPosition
-import com.yandex.mapkit.map.InputListener
+import com.yandex.mapkit.map.Map
 import com.yandex.mapkit.mapview.MapView
-import kotlinx.coroutines.launch
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsControllerCompat
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.yandex.mapkit.user_location.UserLocationObjectListener
-import com.yandex.mapkit.user_location.UserLocationView
-import com.yandex.runtime.image.ImageProvider
-import android.Manifest
-import android.graphics.PointF
-import com.yandex.mapkit.layers.ObjectEvent
-import com.yandex.mapkit.map.IconStyle
+import kotlin.random.Random
 
 class MainActivity : ComponentActivity() {
-
-    private lateinit var mapView: MapView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,33 +48,11 @@ class MainActivity : ComponentActivity() {
         MapKitFactory.setApiKey("04b285be-eee6-45c5-8a1f-acfb37111273")
         MapKitFactory.initialize(this)
 
-        enableEdgeToEdge()
-
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-        val controller = WindowInsetsControllerCompat(window, window.decorView)
-        controller.isAppearanceLightStatusBars = true
-
         setContent {
             TurismoTheme {
                 MainScreen()
             }
         }
-    }
-
-    override fun onStart() {
-        super.onStart()
-        MapKitFactory.getInstance().onStart()
-        if (::mapView.isInitialized) {
-            mapView.onStart()
-        }
-    }
-
-    override fun onStop() {
-        if (::mapView.isInitialized) {
-            mapView.onStop()
-        }
-        MapKitFactory.getInstance().onStop()
-        super.onStop()
     }
 }
 
@@ -96,245 +61,127 @@ class MainActivity : ComponentActivity() {
 fun MainScreen() {
     var searchQuery by remember { mutableStateOf(TextFieldValue("")) }
     var selectedTab by remember { mutableStateOf(0) }
-    var selectedPoint by remember { mutableStateOf<Point?>(null) }
-    var showBottomSheet by rememberSaveable { mutableStateOf(false) }
 
-    val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
-    val bottomSheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = true,
-        confirmValueChange = { true }
-    )
-
-    Box(modifier = Modifier.fillMaxSize()) {
-
-        YandexMapComponent(
-            modifier = Modifier.fillMaxSize(),
-            onMapClick = { point ->
-                selectedPoint = point
-                showBottomSheet = true
-            }
+    Column(modifier = Modifier.fillMaxSize()) {
+        Spacer(
+            modifier = Modifier
+                .height(32.dp)
+                .fillMaxWidth()
+                .background(Color.DarkGray)
         )
 
-        Column(modifier = Modifier.fillMaxSize()) {
-            Spacer(modifier = Modifier.height(32.dp))
-
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color.LightGray)
+                .padding(horizontal = 16.dp, vertical = 16.dp)
+        ) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(Color.White)
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                contentAlignment = Alignment.CenterStart
             ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(24.dp))
-                        .background(Color.White)
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    contentAlignment = Alignment.CenterStart
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        if (searchQuery.text.isEmpty()) {
-                            Text(
-                                text = "Search",
-                                color = Color.Gray,
-                                fontSize = 14.sp,
-                                modifier = Modifier.weight(1.2f),
-                                textAlign = TextAlign.Start
-                            )
-                        }
-                        BasicTextField(
-                            value = searchQuery,
-                            onValueChange = { searchQuery = it },
-                            modifier = Modifier.weight(6f)
-                        )
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = "Search Icon",
-                            tint = Color.Gray,
-                            modifier = Modifier.size(20.dp)
+                    if (searchQuery.text.isEmpty()) {
+                        Text(
+                            text = "Search",
+                            color = Color.Gray,
+                            fontSize = 14.sp,
+                            modifier = Modifier.weight(1.2f),
+                            textAlign = TextAlign.Start
                         )
                     }
-                }
-            }
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            BottomNavigationBar(selectedTab) { selectedTab = it }
-        }
-
-        if (selectedTab == 1) {
-            WeatherScreen()
-        } else if (selectedTab == 2) {
-            HistoryScreen(onReturnToHome = { selectedTab = 0 })
-        }
-
-        if (showBottomSheet && selectedPoint != null) {
-            ModalBottomSheet(
-                onDismissRequest = {
-                    showBottomSheet = false
-                },
-                sheetState = bottomSheetState,
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text("Новая точка", style = MaterialTheme.typography.headlineSmall)
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text("Широта: ${"%.6f".format(selectedPoint?.latitude)}")
-                    Text("Долгота: ${"%.6f".format(selectedPoint?.longitude)}")
-                    Spacer(modifier = Modifier.height(24.dp))
-                    Button(
-                        onClick = {
-                            selectedPoint?.let { point ->
-                                val intent = Intent(context, CreateActivity::class.java).apply {
-                                    putExtra("LATITUDE", point.latitude)
-                                    putExtra("LONGITUDE", point.longitude)
-                                }
-                                context.startActivity(intent)
-                                coroutineScope.launch {
-                                    bottomSheetState.hide()
-                                    showBottomSheet = false
-                                }
-                            }
-                        }
-                    ) {
-                        Text("Добавить место")
-                    }
+                    BasicTextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        modifier = Modifier.weight(6f)
+                    )
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "Search Icon",
+                        tint = Color.Gray,
+                        modifier = Modifier.size(20.dp)
+                    )
                 }
             }
         }
+
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxSize()
+                .background(Color.LightGray)
+        ) {
+            when (selectedTab) {
+                0 -> MapScreen()
+                1 -> WeatherScreen()
+                2 -> HistoryScreen(onReturnToHome = { selectedTab = 0 })
+            }
+        }
+
+        BottomNavigationBar(selectedTab) { selectedTab = it }
     }
 }
 
 @Composable
-fun YandexMapComponent(
-    modifier: Modifier = Modifier,
-    onMapClick: (Point) -> Unit = {},
-    moveToUserLocation: Boolean = false
-) {
-    val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
-
-    val locationPermissions = arrayOf(
-        Manifest.permission.ACCESS_FINE_LOCATION,
-        Manifest.permission.ACCESS_COARSE_LOCATION
-    )
-
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        val granted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true
-        if (!granted) {
-            Toast.makeText(context, "Необходимо разрешение на доступ к местоположению", Toast.LENGTH_LONG).show()
-        }
-    }
-
-    LaunchedEffect(Unit) {
-        val fineGranted = ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.ACCESS_FINE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
-
-        val coarseGranted = ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.ACCESS_COARSE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
-
-        if (!fineGranted || !coarseGranted) {
-            permissionLauncher.launch(locationPermissions)
-        }
-    }
-
-    val mapView = remember {
-        MapView(context).apply {
-            mapWindow.map.move(
-                CameraPosition(Point(55.751574, 37.573856), 11f, 0f, 0f),
-                Animation(Animation.Type.SMOOTH, 1f),
-                null
+fun BottomNavigationBar(selectedTab: Int, onTabSelected: (Int) -> Unit) {
+    NavigationBar(containerColor = Color.Black) {
+        NavigationBarItem(
+            selected = selectedTab == 0,
+            onClick = { onTabSelected(0) },
+            icon = { Text("🏠", color = if (selectedTab == 0) Color.White else Color.Gray) },
+            label = { Text("Home", color = if (selectedTab == 0) Color.White else Color.Gray) },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = Color.White,
+                unselectedIconColor = Color.Gray,
+                selectedTextColor = Color.White,
+                unselectedTextColor = Color.Gray,
+                indicatorColor = Color.Black
             )
-        }
+        )
+        NavigationBarItem(
+            selected = selectedTab == 1,
+            onClick = { onTabSelected(1) },
+            icon = { Text("⛅", color = if (selectedTab == 1) Color.White else Color.Gray) },
+            label = { Text("Weather", color = if (selectedTab == 1) Color.White else Color.Gray) },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = Color.White,
+                unselectedIconColor = Color.Gray,
+                selectedTextColor = Color.White,
+                unselectedTextColor = Color.Gray,
+                indicatorColor = Color.Black
+            )
+        )
+        NavigationBarItem(
+            selected = selectedTab == 2,
+            onClick = { onTabSelected(2) },
+            icon = { Text("📜", color = if (selectedTab == 2) Color.White else Color.Gray) },
+            label = { Text("History", color = if (selectedTab == 2) Color.White else Color.Gray) },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = Color.White,
+                unselectedIconColor = Color.Gray,
+                selectedTextColor = Color.White,
+                unselectedTextColor = Color.Gray,
+                indicatorColor = Color.Black
+            )
+        )
     }
-
-    DisposableEffect(lifecycleOwner) {
-        val lifecycle = lifecycleOwner.lifecycle
-        val observer = LifecycleEventObserver { _, event ->
-            when (event) {
-                Lifecycle.Event.ON_START -> mapView.onStart()
-                Lifecycle.Event.ON_STOP -> mapView.onStop()
-                else -> {}
-            }
-        }
-        lifecycle.addObserver(observer)
-        onDispose {
-            lifecycle.removeObserver(observer)
-        }
-    }
-
-    AndroidView(
-        factory = {
-            mapView.apply {
-                mapWindow.map.addInputListener(object : InputListener {
-                    override fun onMapTap(map: com.yandex.mapkit.map.Map, point: Point) {
-                        val placemark = map.mapObjects.addPlacemark(point)
-
-                        placemark.setIcon(
-                            ImageProvider.fromResource(context, R.drawable.add),
-                            IconStyle().apply {
-                                scale = 5.0f
-                                anchor = PointF(0.5f, 1.0f)
-                            }
-                        )
-
-                        onMapClick(point)
-                    }
-
-                    override fun onMapLongTap(map: com.yandex.mapkit.map.Map, point: Point) {}
-                })
-
-                val mapKit = MapKitFactory.getInstance()
-                val userLocationLayer = mapKit.createUserLocationLayer(mapWindow).apply {
-                    isVisible = true
-                    isHeadingEnabled = true
-                }
-
-                if (moveToUserLocation) {
-                    userLocationLayer.setObjectListener(object : UserLocationObjectListener {
-                        override fun onObjectAdded(userLocationView: UserLocationView) {
-                            userLocationView.arrow?.geometry?.let { userLocation ->
-                                mapWindow.map.move(
-                                    CameraPosition(userLocation, 15f, 0f, 0f),
-                                    Animation(Animation.Type.SMOOTH, 1f),
-                                    null
-                                )
-                            }
-                            userLocationLayer.setObjectListener(null)
-                        }
-
-                        override fun onObjectRemoved(view: UserLocationView) {}
-                        override fun onObjectUpdated(p0: UserLocationView, p1: ObjectEvent) {}
-                    })
-                }
-            }
-        },
-        modifier = modifier.fillMaxSize()
-    )
 }
-
-
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen() {
+fun MapScreen() {
     val context = LocalContext.current
     var showBottomSheet by rememberSaveable { mutableStateOf(false) }
-    var selectedPoint by remember { mutableStateOf<Point?>(null) }
+
+    val latitude = remember { mutableStateOf(0.0) }
+    val longitude = remember { mutableStateOf(0.0) }
 
     val bottomSheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true,
@@ -343,58 +190,104 @@ fun HomeScreen() {
 
     val coroutineScope = rememberCoroutineScope()
 
-    if (showBottomSheet && selectedPoint != null) {
+    val mapView = remember { MapView(context) }
+
+    DisposableEffect(Unit) {
+        mapView.onStart()
+
+        onDispose {
+            mapView.onStop()
+        }
+    }
+
+    val map = remember { mapView.map }
+    val mapObjects = remember { map.mapObjects }
+
+    val generateRandomCoordinates: () -> Unit = {
+        latitude.value = Random.nextDouble(-90.0, 90.0)
+        longitude.value = Random.nextDouble(-180.0, 180.0)
+    }
+
+    DisposableEffect(Unit) {
+        map.move(
+            CameraPosition(Point(55.751244, 37.618423), 3.0f, 0.0f, 0.0f),
+            Animation(Animation.Type.SMOOTH, 1f),
+            null
+        )
+
+        val onMapClickListener = object : com.yandex.mapkit.map.InputListener {
+            override fun onMapTap(map: Map, point: Point) {
+                mapObjects.clear()
+                mapObjects.addPlacemark(point)
+
+                latitude.value = point.latitude
+                longitude.value = point.longitude
+
+                generateRandomCoordinates()
+                showBottomSheet = true
+            }
+
+            override fun onMapLongTap(map: Map, point: Point) {}
+        }
+
+        map.addInputListener(onMapClickListener)
+
+        onDispose {
+            map.removeInputListener(onMapClickListener)
+            mapObjects.clear()
+        }
+    }
+
+    if (showBottomSheet) {
         ModalBottomSheet(
-            onDismissRequest = {
-                showBottomSheet = false
-            },
+            onDismissRequest = { showBottomSheet = false },
             sheetState = bottomSheetState,
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text("Новая точка", style = MaterialTheme.typography.headlineSmall)
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("Широта: ${"%.6f".format(selectedPoint?.latitude)}")
-                Text("Долгота: ${"%.6f".format(selectedPoint?.longitude)}")
-                Spacer(modifier = Modifier.height(24.dp))
-                Button(
-                    onClick = {
-                        selectedPoint?.let { point ->
-                            val intent = Intent(context, CreateActivity::class.java).apply {
-                                putExtra("LATITUDE", point.latitude)
-                                putExtra("LONGITUDE", point.longitude)
+            AndroidView(
+                factory = { ctx ->
+                    LayoutInflater.from(ctx).inflate(R.layout.bottom_sheet_dialog, null).apply {
+                        findViewById<TextView>(R.id.latitude_value).text = latitude.value.toString()
+                        findViewById<TextView>(R.id.longitude_value).text = longitude.value.toString()
+
+                        findViewById<Button>(R.id.btn_add_location).setOnClickListener {
+                            val intent = Intent(ctx, CreateActivity::class.java).apply {
+                                putExtra("LATITUDE", latitude.value)
+                                putExtra("LONGITUDE", longitude.value)
                             }
-                            context.startActivity(intent)
+                            ctx.startActivity(intent)
+
                             coroutineScope.launch {
                                 bottomSheetState.hide()
                                 showBottomSheet = false
                             }
                         }
                     }
-                ) {
-                    Text("Добавить место")
+                },
+                modifier = Modifier.fillMaxWidth(),
+                update = { view ->
+                    view.findViewById<TextView>(R.id.latitude_value).text = latitude.value.toString()
+                    view.findViewById<TextView>(R.id.longitude_value).text = longitude.value.toString()
                 }
-            }
+            )
         }
     }
 
-    YandexMapComponent(
-        modifier = Modifier.fillMaxSize(),
-        onMapClick = { point ->
-            selectedPoint = point
-            showBottomSheet = true
-        },
-        moveToUserLocation = true
-    )
+    Box(modifier = Modifier.fillMaxSize()) {
+        AndroidView(
+            factory = { mapView },
+            modifier = Modifier.fillMaxSize()
+        )
+    }
 }
 
 @Composable
 fun WeatherScreen() {
-    Box(modifier = Modifier.fillMaxSize().background(Color.Cyan)) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Cyan),
+        contentAlignment = Alignment.Center
+    ) {
         Text(text = "Прогноз погоды", modifier = Modifier.padding(16.dp))
     }
 }
@@ -403,38 +296,21 @@ fun WeatherScreen() {
 fun HistoryScreen(onReturnToHome: () -> Unit) {
     val context = LocalContext.current
     val launcher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
-    ) { result -> onReturnToHome() }
+        contract = androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
+    ) {
+        onReturnToHome()
+    }
 
     LaunchedEffect(Unit) {
-        val intent = Intent(context, ListActivity::class.java)
-        launcher.launch(intent)
+        launcher.launch(Intent(context, ListActivity::class.java))
     }
 
     Box(modifier = Modifier.fillMaxSize()) {}
 }
 
-@Composable
-fun BottomNavigationBar(selectedTab: Int, onTabSelected: (Int) -> Unit) {
-    NavigationBar(containerColor = Color.Black) {
-        listOf(
-            "🏠" to "Home",
-            "⛅" to "Weather",
-            "📜" to "History"
-        ).forEachIndexed { index, (icon, label) ->
-            NavigationBarItem(
-                selected = selectedTab == index,
-                onClick = { onTabSelected(index) },
-                icon = { Text(icon, color = if (selectedTab == index) Color.White else Color.Gray) },
-                label = { Text(label, color = if (selectedTab == index) Color.White else Color.Gray) }
-            )
-        }
-    }
-}
-
 @Preview(showBackground = true)
 @Composable
-fun DefaultPreview() {
+fun MainScreenPreview() {
     TurismoTheme {
         MainScreen()
     }
