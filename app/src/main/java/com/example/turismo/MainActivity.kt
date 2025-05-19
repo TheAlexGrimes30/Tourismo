@@ -63,12 +63,6 @@ fun MainScreen() {
     var selectedTab by remember { mutableStateOf(0) }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        Spacer(
-            modifier = Modifier
-                .height(32.dp)
-                .fillMaxWidth()
-                .background(Color.DarkGray)
-        )
 
         Box(
             modifier = Modifier
@@ -116,7 +110,6 @@ fun MainScreen() {
             modifier = Modifier
                 .weight(1f)
                 .fillMaxSize()
-                .background(Color.LightGray)
         ) {
             when (selectedTab) {
                 0 -> MapScreen()
@@ -128,6 +121,7 @@ fun MainScreen() {
         BottomNavigationBar(selectedTab) { selectedTab = it }
     }
 }
+
 
 @Composable
 fun BottomNavigationBar(selectedTab: Int, onTabSelected: (Int) -> Unit) {
