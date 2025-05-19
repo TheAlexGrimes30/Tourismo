@@ -59,7 +59,6 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen() {
-    var searchQuery by remember { mutableStateOf(TextFieldValue("")) }
     var selectedTab by remember { mutableStateOf(0) }
     val context = LocalContext.current
 
@@ -73,46 +72,6 @@ fun MainScreen() {
             modifier = Modifier
                 .fillMaxSize()
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 16.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(24.dp))
-                        .background(Color.White)
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    contentAlignment = Alignment.CenterStart
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        if (searchQuery.text.isEmpty()) {
-                            Text(
-                                text = "Search",
-                                color = Color.Gray,
-                                fontSize = 14.sp,
-                                modifier = Modifier.weight(1.2f),
-                                textAlign = TextAlign.Start
-                            )
-                        }
-                        BasicTextField(
-                            value = searchQuery,
-                            onValueChange = { searchQuery = it },
-                            modifier = Modifier.weight(6f)
-                        )
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = "Search Icon",
-                            tint = Color.Gray,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                }
-            }
 
             Spacer(modifier = Modifier.weight(1f))
             BottomNavigationBar(selectedTab) { newTab ->
