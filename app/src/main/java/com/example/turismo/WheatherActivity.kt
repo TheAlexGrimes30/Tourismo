@@ -39,7 +39,7 @@ class WheatherActivity : AppCompatActivity() {
 
     private fun loadWeather() {
         CoroutineScope(Dispatchers.Main).launch {
-            val weatherData = fetchWeatherFromApi("Bern")
+            val weatherData = fetchWeatherFromApi("Curitiba")
             if (weatherData != null) {
                 temperatureValue.text = weatherData.temperature
                 weatherDescription.text = weatherData.description
@@ -54,7 +54,7 @@ class WheatherActivity : AppCompatActivity() {
 
     private suspend fun fetchWeatherFromApi(city: String): WeatherData? = withContext(Dispatchers.IO) {
         try {
-            val url = URL("https://goweather.herokuapp.com/weather/$city")
+            val url = URL("https://goweather.herokuapp.com/weather/Curitiba")
             val connection = url.openConnection() as HttpURLConnection
             connection.requestMethod = "GET"
             connection.connectTimeout = 5000
